@@ -1,7 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import SummaryForm from "../SummaryForm";
+import userEvent from "@testing-library/user-event";
 
 test("checbox is unchecked by default", () => {
+  const user = userEvent.setup();
+
   render(<SummaryForm />);
 
   const checkbox = screen.getByRole("checkbox", {
@@ -16,7 +19,9 @@ test("checbox is unchecked by default", () => {
   expect(confirmOrderButton).toBeDisabled();
 });
 
-test("when checkbox is clicked, confirm order button is disabled", () => {
+test("when checkbox is clicked, confirm order button is disabled", async () => {
+  const user = userEvent.setup();
+
   render(<SummaryForm />);
 
   const checkbox = screen.getByRole("checkbox", {
@@ -27,11 +32,32 @@ test("when checkbox is clicked, confirm order button is disabled", () => {
     name: "Confirm order",
   });
 
-  fireEvent.click(checkbox);
+  await user.click(checkbox);
 
   expect(confirmOrderButton).toBeEnabled();
 
-  fireEvent.click(checkbox);
+  await user.click(checkbox);
 
   expect(confirmOrderButton).toBeDisabled();
+});
+
+test("popover responds to hover", async () => {
+  const user = userEvent.setup();
+  render(<SummaryForm />);
+
+  const nullPopOver = screen.queryByText(
+    /no ice cream will actually be delivered/i
+  );
+
+  expect(nullPopOver).not.toBeInTheDocument();
+
+  const termsAndConditions = screen.getByText(/terms and conditions/i);
+  await user.hover(termsAndConditions);
+  const popOver = screen.queryByText(
+    /no ice cream will actually be delivered/i
+  );
+  expect(popOver).toBeInTheDocument();
+
+  await user.unhover(termsAndConditions);
+  expect(popOver).not.toBeInTheDocument();
 });
